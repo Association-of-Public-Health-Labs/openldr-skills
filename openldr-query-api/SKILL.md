@@ -151,6 +151,16 @@ When results are available:
 - Explain domain-specific metrics in plain language
 - Suggest related endpoints for deeper analysis
 
+### HTML Report Output
+
+If the user requested an HTML report (keywords: "as HTML", "generate report", "show in browser", "visualize this", "open in browser"), invoke `openldr:report` after receiving the API response. Pass:
+- The API response data (JSON)
+- The report title (derived from the endpoint, e.g., "HIV VL Suppression by Province")
+- The date range (from `interval_dates` parameter)
+- The data source (the full endpoint URL used)
+
+Do NOT present results in markdown tables when the user wants HTML — invoke the report skill directly.
+
 ## Error Handling
 
 | Status | Meaning | Action |
