@@ -201,6 +201,11 @@ if grep -qiE "(microsoft|wsl)" /proc/version 2>/dev/null; then
 fi
 
 # ---------------------------------------------------------------------------
+# Detect browser opener before printing success (fail early)
+# ---------------------------------------------------------------------------
+OPEN_CMD="$(detect_open_cmd)"
+
+# ---------------------------------------------------------------------------
 # Print path and URL (green if terminal)
 # ---------------------------------------------------------------------------
 echo -e "${GREEN}Report:${NC} ${FILE_PATH}"
@@ -209,11 +214,9 @@ echo -e "${GREEN}URL:${NC}    ${FILE_URL}"
 # ---------------------------------------------------------------------------
 # Open in browser
 # ---------------------------------------------------------------------------
-OPEN_CMD="$(detect_open_cmd)"
-
 # cmd.exe /c start needs special quoting
 if [[ "$OPEN_CMD" == "cmd.exe /c start" ]]; then
   cmd.exe /c start "" "$FILE_URL"
 else
-  $OPEN_CMD "$FILE_PATH"
+  $OPEN_CMD "$FILE_URL" 2>/dev/null &
 fi
