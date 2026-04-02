@@ -191,6 +191,15 @@ Present the answer clearly:
 - Suggest related questions or next steps (e.g., "You might also want to explore the viewFacilities view which joins Facilities with HealthcareAreas")
 - If the question leads to creating views or datasets, suggest the appropriate skill (`openldr:create-view` or `openldr:create-dataset`)
 
+### HTML Report Output
+
+If the user requested an HTML report (keywords: "as HTML", "generate report", "show in browser", "visualize this", "open in browser") and the answer includes tabular or structured data (query results, panel listings, schema tables), invoke `openldr:report`. Pass:
+- The query result data (tabular rows)
+- The report title (derived from the user's question, e.g., "OpenLDR Panel Codes Overview")
+- The data source (the SQL query used or "OpenLDR Knowledge Base")
+
+Do NOT present results in markdown tables when the user wants HTML — invoke the report skill directly.
+
 ## Question Categories
 
 | Category | Knowledge Base | Live DB | Example Questions |
