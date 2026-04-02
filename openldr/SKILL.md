@@ -24,6 +24,7 @@ OpenLDR skills automate laboratory data workflows. Invoke the correct sub-skill 
 | Generate analytics dataset tables, table-valued functions, CREATE TABLE DDL, population scripts, or Python ORM models from existing views | `openldr:create-dataset` |
 | Query the OpenLDR Analytics API — find endpoints, build parameters, execute requests, explain results | `openldr:query-api` |
 | Ask questions about OpenLDR — database schema, panel codes, table columns, relationships, data model, HL7 codes | `openldr:explore` |
+| Generate HTML report to visualize data in the browser, export results as HTML | `openldr:report` |
 
 ## When to Use Each Skill
 
@@ -34,6 +35,8 @@ OpenLDR skills automate laboratory data workflows. Invoke the correct sub-skill 
 **`openldr:query-api`** — User mentions: VL suppression, EID positivity, TB results, tested samples, registered samples, rejected samples, TAT, turnaround time, lab performance, facility data, OpenLDR API, dashboard data.
 
 **`openldr:explore`** — User mentions: OpenLDR schema, table columns, what does X mean, panel codes, observation codes, data model, relationships, facility hierarchy, HL7 codes, LOINC, how are tables connected, what tables exist, database structure.
+
+**`openldr:report`** — User mentions: HTML report, visualize in browser, export as HTML, show in browser, open in browser, generate report, report page.
 
 ## Setup — Database & API Credentials
 
@@ -102,6 +105,7 @@ Skill: openldr:create-view
 Skill: openldr:create-dataset
 Skill: openldr:query-api
 Skill: openldr:explore
+Skill: openldr:report
 ```
 
 Do NOT attempt to do the work yourself. Always delegate to the sub-skill.
