@@ -686,17 +686,17 @@ const SERIES_COLORS = [
   '#4ade80', // 2  green
   '#fbbf24', // 3  amber
   '#f87171', // 4  red
-  '#a78bfa', // 5  violet
-  '#34d399', // 6  emerald
-  '#fb923c', // 7  orange
-  '#e879f9', // 8  fuchsia
-  '#22d3ee', // 9  cyan
-  '#86efac', // 10 light green
-  '#fcd34d', // 11 yellow
-  '#fca5a5', // 12 light red
-  '#c4b5fd', // 13 light violet
-  '#6ee7b7', // 14 teal
-  '#fdba74'  // 15 peach
+  '#a78bfa', // 5  purple
+  '#fb923c', // 6  orange
+  '#2dd4bf', // 7  teal
+  '#f472b6', // 8  pink
+  '#818cf8', // 9  indigo
+  '#34d399', // 10 emerald
+  '#facc15', // 11 yellow
+  '#fb7185', // 12 rose
+  '#c084fc', // 13 violet
+  '#fdba74', // 14 light orange
+  '#22d3ee'  // 15 cyan
 ];
 ```
 
