@@ -1,0 +1,5 @@
+# Superpowers brainstorming sessions
+.superpowers/
+
+# Environment variables (credentials)
+.env

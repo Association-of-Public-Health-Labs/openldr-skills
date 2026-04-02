@@ -1,0 +1,71 @@
+<!--
+  OpenLDR Column Selector Template
+
+  This is a REFERENCE TEMPLATE showing the HTML structure for the column selector.
+  The skill generates the actual HTML dynamically by:
+  1. Replacing {PANEL_CODE} and {PANEL_DESC} with the user's panel
+  2. Grouping observation codes by domain
+  3. Creating one .option element per observation code
+
+  This is a content fragment — the visual companion server wraps it in its
+  frame template (header, CSS theme, selection indicator, interactive JS).
+
+  CSS classes used (provided by the visual companion frame):
+  - .section: content block with bottom margin
+  - .options: container for selectable items
+  - .option: individual selectable item (click to toggle)
+  - .content: text content within an option
+  - .subtitle: secondary text
+  - data-multiselect: allows multiple selections per group
+  - data-choice: value recorded when item is selected
+-->
+
+<h2>Column Selector — Panel: {PANEL_CODE} ({PANEL_DESC})</h2>
+<p class="subtitle">Select the observation codes to include as columns in {VIEW_NAME}. Grouped by domain. Click items to select/deselect.</p>
+
+<!-- REPEAT THIS SECTION BLOCK FOR EACH DOMAIN GROUP -->
+<div class="section">
+  <h3>{GROUP_NAME}</h3>
+  <div class="options" data-multiselect>
+
+    <!-- REPEAT THIS OPTION BLOCK FOR EACH OBSERVATION CODE IN THE GROUP -->
+    <div class="option selected" data-choice="{OBS_CODE}" onclick="toggleSelect(this)">
+      <div class="letter">&#9745;</div>
+      <div class="content">
+        <h3>{OBS_CODE} &rarr; {COLUMN_ALIAS}</h3>
+        <p>"{DESCRIPTION}" &middot; Default: <code>{NULL_DEFAULT}</code></p>
+      </div>
+    </div>
+    <!-- END REPEAT -->
+
+  </div>
+</div>
+<!-- END REPEAT -->
+
+<!-- SUBMIT BUTTON — always include at bottom -->
+<div style="text-align: center; margin-top: 2.5rem; margin-bottom: 2rem;">
+  <button
+    onclick="document.querySelectorAll('.option.selected').forEach(el => toggleSelect(el, true));
+             this.textContent = '\u2713 Selection submitted \u2014 confirm in terminal';
+             this.style.background = '#22c55e'; this.style.cursor = 'default';"
+    style="
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 14px 48px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      letter-spacing: 0.02em;
+      transition: background 0.2s;
+    "
+    onmouseover="this.style.background='#2563eb'"
+    onmouseout="this.style.background='#3b82f6'"
+  >
+    Submit Selection
+  </button>
+  <p class="subtitle" style="margin-top: 1rem; opacity: 0.6;">
+    Click items to select/deselect, then submit. Confirm your final selection in the terminal.
+  </p>
+</div>
