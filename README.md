@@ -73,6 +73,37 @@ openldr-create-view/scripts/query-db.sh test
 openldr-query-api/scripts/query-api.sh test
 ```
 
+## HTML Report Generation
+
+The `openldr-report` skill generates self-contained HTML report pages with a dark dashboard theme, Chart.js charts, and sortable data tables. Reports open directly in your browser — no server needed.
+
+### How to Use
+
+Request an HTML report in two ways:
+
+**Upfront** — include it in your request:
+```
+Show me VL suppression by province as an HTML report
+```
+
+**After results** — ask for HTML after seeing terminal output:
+```
+Generate an HTML report for this
+```
+
+### What Gets Generated
+
+- **KPI summary cards** — auto-extracted from aggregate metrics (totals, rates, TAT)
+- **Charts** — auto-selected based on data shape (bar, line, doughnut, or grouped bar)
+- **Sortable data table** — always included, click column headers to sort
+- **Dark dashboard theme** — elegant, print-friendly design
+
+The report is a single `.html` file saved to your working directory (customizable) and opened in your default browser automatically.
+
+### Trigger Keywords
+
+`generate HTML report`, `show in browser`, `visualize this`, `as HTML`, `open in browser`, `export as HTML report`
+
 ## Supported Test Types
 
 | Test | Panel Codes | LOINC |
