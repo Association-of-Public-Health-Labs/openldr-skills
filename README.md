@@ -11,6 +11,7 @@ AI agent skills for working with [OpenLDR](https://openldr.org) (Open Laboratory
 | **openldr-create-view** | Create SQL views that pivot LabResults observation codes into columns. Guided workflow with column selection |
 | **openldr-create-dataset** | Generate analytics dataset tables, functions, DDL, population scripts, and Python ORM models |
 | **openldr-query-api** | Query the OpenLDR Analytics API — 126+ endpoints for HIV VL, HIV EID, TB GeneXpert, and more |
+| **openldr-report** | Generate self-contained HTML report pages with dark dashboard theme, Chart.js charts, and sortable data tables |
 
 ## Installation
 
@@ -25,13 +26,13 @@ git clone https://github.com/Association-of-Public-Health-Labs/openldr-skills.gi
 cd openldr-skills
 
 # Global install (all projects)
-for skill in openldr openldr-explore openldr-create-view openldr-create-dataset openldr-query-api; do
+for skill in openldr openldr-explore openldr-create-view openldr-create-dataset openldr-query-api openldr-report; do
   ln -s "$(pwd)/$skill" ~/.claude/skills/$skill
 done
 
 # Or project-specific install
 mkdir -p /path/to/your/project/.claude/skills
-for skill in openldr openldr-explore openldr-create-view openldr-create-dataset openldr-query-api; do
+for skill in openldr openldr-explore openldr-create-view openldr-create-dataset openldr-query-api openldr-report; do
   ln -s "$(pwd)/$skill" /path/to/your/project/.claude/skills/$skill
 done
 ```
