@@ -1,0 +1,1 @@
+../../openldr-query-api/references/api-endpoint-catalog.md
