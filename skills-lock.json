@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "skills": {
+    "openldr": {
+      "source": "Association-of-Public-Health-Labs/openldr-skills",
+      "sourceType": "github",
+      "skillPath": "openldr/SKILL.md",
+      "computedHash": "c5ff4aeb3911d5423b4a2c258d49dfb329d7a1e0483fd80760e7e97f6b464850"
+    },
+    "openldr-create-dataset": {
+      "source": "Association-of-Public-Health-Labs/openldr-skills",
+      "sourceType": "github",
+      "skillPath": "openldr-create-dataset/SKILL.md",
+      "computedHash": "f7e621844b7a724e3e1ea56b6ecc69034b49bbc5066826378147f27915559c3b"
+    },
+    "openldr-create-view": {
+      "source": "Association-of-Public-Health-Labs/openldr-skills",
+      "sourceType": "github",
+      "skillPath": "openldr-create-view/SKILL.md",
+      "computedHash": "fbbb7e02804647d5b70c2c63037ded49cb51f2de600f8e095f2541cbe228ed95"
+    },
+    "openldr-explore": {
+      "source": "Association-of-Public-Health-Labs/openldr-skills",
+      "sourceType": "github",
+      "skillPath": "openldr-explore/SKILL.md",
+      "computedHash": "347acaad107efe0cb8842afb2db0e6d13b5f7a8c2095441deb8bc959dde8da13"
+    },
+    "openldr-query-api": {
+      "source": "Association-of-Public-Health-Labs/openldr-skills",
+      "sourceType": "github",
+      "skillPath": "openldr-query-api/SKILL.md",
+      "computedHash": "e6b7733f1f63c82696c2a23079cf99d818711820dd0efd9c8d836a7561ffa3b6"
+    },
+    "openldr-report": {
+      "source": "Association-of-Public-Health-Labs/openldr-skills",
+      "sourceType": "github",
+      "skillPath": "openldr-report/SKILL.md",
+      "computedHash": "c61fb3894cd9971457ca6d2c4dcba62de2127ba7b642dee00209065b678b4e33"
+    }
+  }
+}
