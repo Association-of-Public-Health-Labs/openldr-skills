@@ -1,296 +1,60 @@
-# Scaffold Guide — Create a New Dashboard App
+# Scaffold Guide: Create a New Dashboard App
 
-## Purpose
+There is no generator script. Copy the **VL** app's skeleton and remove what is VL-specific; it is the newest app and matches production. Paths are relative to `openldr-monorepo/`. `<id>` is the short id (`eid`, `cd4`, …).
 
-Guide for creating a new dashboard app in the OpenLDR turborepo monorepo. The result is a working Next.js 15 app with auth, theming, AI chat, and navigation.
+## 1. Collect inputs (ask for any that are missing)
 
-**Prerequisites:** Monorepo path resolved, user has provided dashboard name and sections.
+| Input | Example |
+|---|---|
+| id (lowercase, `^[a-z][a-z0-9-]*$`, must not exist in `apps/`) | `eid` |
+| Name and portal title (Portuguese) | "Diagnóstico Precoce Infantil", "Portal de DPI" |
+| Primary colour (must differ from VL `#00B000` and TB `#FF3030`) | ask |
+| API base path | `/hiv/eid` |
+| Pages (nav labels in Portuguese) | from the migration spec |
+| Production domain | `eid.openldr.org.mz` |
 
----
+## 2. Copy the skeleton from `apps/vl`
 
-## Process
+Copy these, then rename every `vl`/`VL`:
+- `package.json`: name `<id>`; keep the same scripts (`dev --turbopack`, `build`, `start`, `lint`, `test`). Pass a free port with `-p` when you run it next to TB and VL.
+- `tsconfig.json`, with `@/*` → `./*`.
+- `next.config.ts`, `postcss.config.mjs`, `eslint.config.mjs`, `components.json`, `tailwind.config.ts`, `theme.config.ts`, `vitest.config.ts`, `middleware.ts`, `Dockerfile` (change `--filter=vl` to `--filter=<id>`).
+- `config/api.ts`.
+- `app/layout.tsx`: `<html data-dashboard="<id>">` and `<PlatformThemeProvider dashboard="<id>">`.
+- `app/globals.css`: it imports `packages/design_system/src/styles/theme.css` and declares the `@source` paths.
+- `app/(auth)/*`.
+- `app/(dashboard)/{layout,loading,error}.tsx`.
+- `lib/<id>/{api,nav,admin-probe,admin}.ts(x)` and their tests: change the base path, the probe endpoint and the page list.
 
-```dot
-digraph scaffold {
-  rankdir=LR;
-  node [shape=box];
+Generic VL code (hooks, `ReportCard`, `CardMessage`, export, request gate, dates, format, drill) is **not copied**. It is imported from a shared package. If it hasn't been moved yet, moving it is the first task (`reference-apps.md`, last section).
 
-  "Gather\nRequirements" -> "Validate\nApp Name";
-  "Validate\nApp Name" -> "Run\nscaffold-dashboard.sh";
-  "Run\nscaffold-dashboard.sh" -> "Customize\nNavigation";
-  "Customize\nNavigation" -> "Set Up\ni18n";
-  "Set Up\ni18n" -> "Install\nDependencies";
-  "Install\nDependencies" -> "Verify\nDev Server" [shape=doublecircle];
-}
-```
+Don't copy `.env.local`. Write a `.env.example` with only the variable names (`deploy-guide.md`).
 
----
+## 3. Register the dashboard in the shared shell
 
-## Step 1: Gather Requirements
+- `packages/design_system/src/dashboards.ts`:
+  - add `<id>` to `DashboardId`
+  - add an entry with `ready: false`
+  - add a literal `process.env.NEXT_PUBLIC_DASHBOARD_URL_<ID>` read in `ENV_OVERRIDES`
+- `packages/design_system/src/styles/theme.css`: add a `[data-dashboard="<id>"]` block for the primary colour.
+- Update the `dashboards.ts` tests if any exist. TB and VL now list the new dashboard as "Em breve" until it is `ready`.
 
-Ask the user for the following information before proceeding:
+## 4. Nav and pages
 
-| # | Input | Description | Example |
-|---|-------|-------------|---------|
-| 1 | **Dashboard name** | Lowercase, kebab-case identifier | `hivvl`, `eid`, `cd4` |
-| 2 | **Display title** | Human-readable title (Portuguese) | "Portal de HIV Carga Viral" |
-| 3 | **Navigation sections** | Comma-separated section names | "Sumário, Laboratório, Província, Pacientes" |
-| 4 | **Primary color** | Hex color code (default `#00B000`) | `#00B000` |
-| 5 | **API module path** | API route prefix for this dashboard | `/hiv/vl/`, `/hiv/eid/`, `/tb/gx/` |
+- In `lib/<id>/nav.ts`, list the pages with Portuguese labels. Put every page in `UNRELEASED_PAGES` until it passes the data review.
+- Create one `page.tsx` per page with the empty grid (`w-full @container`, `grid grid-cols-1 @[840px]:grid-cols-2 gap-6`).
 
-<HARD-GATE>
-Do not proceed until all five inputs have been collected. If the user omits any, prompt for the missing values explicitly.
-</HARD-GATE>
-
----
-
-## Step 2: Validate App Name
-
-Before running the scaffold script, validate the provided app name:
-
-1. **Format check** — Name must be lowercase and contain only letters, numbers, and hyphens (`^[a-z][a-z0-9-]*$`).
-2. **Uniqueness check** — Confirm no directory exists at `$MONOREPO/apps/{app-name}`.
+## 5. Install and verify
 
 ```bash
-# Format validation
-if [[ ! "$APP_NAME" =~ ^[a-z][a-z0-9-]*$ ]]; then
-  echo "ERROR: App name must be lowercase with only letters, numbers, and hyphens."
-  exit 1
-fi
-
-# Uniqueness validation
-if [ -d "$MONOREPO/apps/$APP_NAME" ]; then
-  echo "ERROR: App '$APP_NAME' already exists at $MONOREPO/apps/$APP_NAME"
-  exit 1
-fi
+pnpm install --frozen-lockfile     # if the lockfile must change for the new workspace, tell the user
+pnpm --filter=<id> test
+pnpm --filter=<id> exec tsc --noEmit
+pnpm --filter=<id> lint
+pnpm turbo run build --filter=<id> --filter=vl --filter=tb
+NEXT_PUBLIC_OPENLDR_API=https://dev.openldr.org.mz pnpm --filter=<id> dev -p <port>
 ```
 
-<HARD-GATE>
-If validation fails, STOP and ask the user for a corrected name. Do not attempt to auto-fix the name.
-</HARD-GATE>
+Adding a workspace means `pnpm-lock.yaml` must change, so `--frozen-lockfile` will refuse to install. Tell the user before updating the lockfile. Check that the lockfile diff only adds the new app's entry. If it re-resolves other packages (it has re-resolved `csstype` and broken TB's tsc before), revert and pin them.
 
----
-
-## Step 3: Run Scaffold Script
-
-Run the scaffold script to generate the app skeleton:
-
-```bash
-scripts/scaffold-dashboard.sh {app-name} \
-  --sections "{sections}" \
-  --monorepo {monorepo_path}
-```
-
-**Example:**
-
-```bash
-scripts/scaffold-dashboard.sh hivvl \
-  --sections "Sumário, Laboratório, Província, Pacientes" \
-  --monorepo /home/user/openldr/openldr-monorepo
-```
-
-The script creates the full Next.js 15 app structure under `$MONOREPO/apps/{app-name}/` including:
-
-- `package.json` with correct workspace dependencies
-- `next.config.ts` with transpile packages
-- `tsconfig.json` extending the monorepo base
-- `app/` directory with layout, page, and section routes
-- Clerk auth middleware
-- Design system integration
-
----
-
-## Step 4: Customize After Scaffold
-
-After the scaffold script completes, apply the following five customizations.
-
-### Step 4a: Dashboard Layout Navigation
-
-Update the dashboard layout file at `$MONOREPO/apps/{app-name}/app/(dashboard)/layout.tsx`:
-
-1. **`navbarOptions`** — Set the navigation items to match the user's requested sections. Each entry needs a `label`, `href`, and `icon`.
-
-2. **`AIChatProvider` dashboard prop** — Set the `dashboard` prop to the app name so the AI chat context is scoped correctly.
-
-3. **`pathToLabel`** — Update the breadcrumb path-to-label mapping to include all section routes.
-
-```tsx
-// Example navbarOptions
-const navbarOptions = [
-  { label: "Sumário", href: "/summary", icon: DashboardIcon },
-  { label: "Laboratório", href: "/laboratory", icon: ScienceIcon },
-  { label: "Província", href: "/province", icon: MapIcon },
-  { label: "Pacientes", href: "/patients", icon: PeopleIcon },
-];
-
-// Example AIChatProvider
-<AIChatProvider dashboard="hivvl">
-  {children}
-</AIChatProvider>
-
-// Example pathToLabel
-const pathToLabel: Record<string, string> = {
-  summary: "Sumário",
-  laboratory: "Laboratório",
-  province: "Província",
-  patients: "Pacientes",
-};
-```
-
-### Step 4b: Theme Colors
-
-Set the primary color in both theme files:
-
-- `$MONOREPO/apps/{app-name}/theme/dark.ts`
-- `$MONOREPO/apps/{app-name}/theme/light.ts`
-
-```ts
-// In both dark.ts and light.ts
-palette: {
-  primary: {
-    main: "#00B000", // Replace with user's chosen color
-  },
-}
-```
-
-### Step 4c: Root Layout Metadata
-
-Update `$MONOREPO/apps/{app-name}/app/layout.tsx` with the display title and description in Portuguese:
-
-```tsx
-export const metadata: Metadata = {
-  title: "Portal de HIV Carga Viral",
-  description: "Painel de monitoramento de HIV Carga Viral para o Sistema OpenLDR",
-};
-```
-
-### Step 4d: Environment Variables
-
-Create `$MONOREPO/apps/{app-name}/.env.local` from the template with the required variables:
-
-```env
-# OpenLDR API
-OPENLDR_API=https://api.openldr.org
-
-# Clerk Authentication
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
-CLERK_SECRET_KEY=sk_test_...
-NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
-NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
-NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/
-NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/
-```
-
-Ask the user for their Clerk keys if not already provided. Do not commit `.env.local` to version control.
-
-### Step 4e: i18n Setup
-
-Create the internationalization message files.
-
-**`$MONOREPO/apps/{app-name}/messages/pt.json`** — Full Portuguese translations:
-
-```json
-{
-  "navigation": {
-    "summary": "Sumário",
-    "laboratory": "Laboratório",
-    "province": "Província",
-    "patients": "Pacientes"
-  },
-  "common": {
-    "loading": "Carregando...",
-    "error": "Erro ao carregar dados",
-    "noData": "Sem dados disponíveis",
-    "search": "Pesquisar",
-    "filter": "Filtrar",
-    "export": "Exportar",
-    "refresh": "Atualizar",
-    "save": "Salvar",
-    "cancel": "Cancelar",
-    "confirm": "Confirmar",
-    "back": "Voltar",
-    "next": "Próximo",
-    "previous": "Anterior",
-    "close": "Fechar",
-    "yes": "Sim",
-    "no": "Não",
-    "total": "Total",
-    "period": "Período",
-    "from": "De",
-    "to": "Até"
-  }
-}
-```
-
-**`$MONOREPO/apps/{app-name}/messages/en.json`** — English skeleton:
-
-```json
-{
-  "navigation": {
-    "summary": "Summary",
-    "laboratory": "Laboratory",
-    "province": "Province",
-    "patients": "Patients"
-  },
-  "common": {
-    "loading": "Loading...",
-    "error": "Error loading data",
-    "noData": "No data available",
-    "search": "Search",
-    "filter": "Filter",
-    "export": "Export",
-    "refresh": "Refresh",
-    "save": "Save",
-    "cancel": "Cancel",
-    "confirm": "Confirm",
-    "back": "Back",
-    "next": "Next",
-    "previous": "Previous",
-    "close": "Close",
-    "yes": "Yes",
-    "no": "No",
-    "total": "Total",
-    "period": "Period",
-    "from": "From",
-    "to": "To"
-  }
-}
-```
-
-Adjust the `navigation` keys to match the actual sections the user requested.
-
----
-
-## Step 5: Install and Verify
-
-### Install Dependencies
-
-```bash
-cd $MONOREPO
-pnpm install
-```
-
-### Start Dev Server
-
-```bash
-pnpm dev --filter={app-name}
-```
-
-### Expected Verification
-
-Confirm the following work correctly:
-
-- [ ] **Clerk sign-in** — The sign-in page renders and authentication flow works
-- [ ] **Empty dashboard shell** — The main layout loads with navigation sidebar and header
-- [ ] **Theme toggle** — Light/dark mode toggle switches themes correctly
-- [ ] **AI chat panel** — The AI chat panel opens and is scoped to the correct dashboard
-
-<HARD-GATE>
-Do not declare the scaffold complete until the dev server boots without errors and all four verification items are confirmed.
-</HARD-GATE>
-
----
-
-## What's Next
-
-Use the report guide (`references/report-guide.md`) to add reports and visualizations to the newly scaffolded dashboard app.
+The user signs in. Never type passwords. Check that the shell, the nav, the dashboard switcher and the theme colour work. Then go to `report-guide.md`.

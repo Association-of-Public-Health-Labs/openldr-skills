@@ -25,7 +25,7 @@ OpenLDR skills automate laboratory data workflows. Invoke the correct sub-skill 
 | Query the OpenLDR Analytics API — find endpoints, build parameters, execute requests, explain results | `openldr:query-api` |
 | Ask questions about OpenLDR — database schema, panel codes, table columns, relationships, data model, HL7 codes | `openldr:explore` |
 | Generate HTML report to visualize data in the browser, export results as HTML | `openldr:report` |
-| Build, create, modify, or improve dashboards in the turborepo monorepo | `openldr:dashboard` |
+| Build, migrate, deploy, modify, or improve dashboards in the turborepo monorepo | `openldr:dashboard` |
 
 ## When to Use Each Skill
 
@@ -39,7 +39,7 @@ OpenLDR skills automate laboratory data workflows. Invoke the correct sub-skill 
 
 **`openldr:report`** — User mentions: HTML report, visualize in browser, export as HTML, show in browser, open in browser, generate report, report page.
 
-**`openldr:dashboard`** — User mentions: create dashboard, new dashboard, build dashboard for, add report, add chart, add page, fix dashboard, improve dashboard, update dashboard, dashboard component, monorepo app, turborepo app.
+**`openldr:dashboard`** — User mentions: migrate dashboard, EID/CD4/CrAg/TB-LAM dashboard, port legacy dashboard, deploy dashboard, release page, Coolify dashboard app, create dashboard, new dashboard, build dashboard for, add report, add chart, add page, fix dashboard, improve dashboard, update dashboard, dashboard component, monorepo app, turborepo app.
 
 ## Setup — Database & API Credentials
 

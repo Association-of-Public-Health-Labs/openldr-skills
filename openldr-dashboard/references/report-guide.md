@@ -1,206 +1,71 @@
-# Report Guide — Add or Modify Dashboard Reports
+# Report Guide: Add or Change a Card or Page
 
-This guide covers adding new reports and modifying existing reports within an OpenLDR dashboard application. Follow each step in order. Do not skip steps.
+A "report" is one card on a page. New cards use the **VL card folder**. When you change an existing TB card, follow the pattern already in that card; don't refactor it unless the user asks.
 
----
+## Adding a card
 
-## Adding a New Report
+### 1. Read before writing
 
-### Step 1: Read Existing Patterns
+- Read one complete VL card of the same kind:
+  - range card: `app/(dashboard)/(index)/reports/vl-*`
+  - lab card: `lab/reports/vl-*`
+  - facility drill card: `clinic/reports/vl-*`
+- Read the wrapper it uses (`components/report-card.tsx`, `lab-report-card.tsx` or `facility-report-card.tsx`).
+- Read the legacy card it replaces: its title, chart, filters, options and legend, for parity.
 
-Before generating any files, scan the target dashboard's existing reports to detect the established file structure and conventions.
+### 2. Confirm the endpoint
 
-```bash
-# List all report directories in the target dashboard
-ls -la $MONOREPO/apps/<app-name>/app/\(dashboard\)/*/reports/
+Find the route in `api_openldr_python/hiv/<module>/` (or `tb/`). Write down:
+- the path
+- the parameters: `interval_dates` as a single `"YYYY-MM-DD,YYYY-MM-DD"` string (check the route; TB had to switch back to this format)
+- `province[]`/`district[]`, `lab_code`, `disaggregation`
+- the exact response keys, which may contain typos
 
-# List report directories per section
-ls -la $MONOREPO/apps/<app-name>/app/\(dashboard\)/lab/reports/
-ls -la $MONOREPO/apps/<app-name>/app/\(dashboard\)/clinic/reports/
-ls -la $MONOREPO/apps/<app-name>/app/\(dashboard\)/\(index\)/reports/
-ls -la $MONOREPO/apps/<app-name>/app/\(dashboard\)/patients/reports/
+Call it once on dev with a signed-in token from the browser session (`window.Clerk.session.getToken()` in page JS; never print the token). Look at the real rows, including nulls and zeros.
 
-# Inspect one existing report to understand the file structure
-ls -la $MONOREPO/apps/<app-name>/app/\(dashboard\)/lab/reports/<existing-report>/
-```
+### 3. Create the folder `app/(dashboard)/<page>/reports/<id>-<name>/`
 
-Read at least one complete report (all files) to understand:
-- Import paths and aliases used
-- Data type shapes and naming conventions
-- Chart configuration patterns
-- Portuguese text conventions for labels and documentation
+| File | Contains |
+|---|---|
+| `constants.ts` | `CARD_ID` (unique, same as the folder name), `TITLE` (Portuguese, as in legacy), `ENDPOINT` (path under the module base) |
+| `actions.ts` | `fetchData(range, …, token)` through the app's `<id>Get`/`<id>GetList`, `toChart(rows) → ChartModel`, `toExcel(rows) → ExcelSheet`. Pure functions only: no React, Next, MUI or `@repo/*` |
+| `actions.test.ts` | Mocks the API module. Asserts the endpoint and parameters, the chart transform, null and zero rows, and the Excel header row |
+| `docs.tsx` | `<CardDocs>` with overview, legend, reading, filters, notes (including any ✱ parity deviation) and endpoint |
+| `index.tsx` | `"use client"`. About 15 lines passing the above to the wrapper card |
 
-If no reports exist in the target dashboard, use the TB 6-file pattern from `tb-reference-patterns.md` as the default structure.
+Rules for the transforms:
+- Drop rows with a null category; a null category crashes ApexCharts.
+- Percentages are 0 when the total is 0.
+- Month labels include the year (`Out/25`).
+- Province and district names match the map keys (accent-insensitive).
 
-### Step 2: Identify the API Endpoint
+### 4. Wire it
 
-Load `api-endpoint-catalog.md` (symlinked in this references directory) and locate the endpoint that serves data for the report.
+Import it in the page's `page.tsx` grid. A card that needs the full width uses `@[840px]:col-span-2`.
 
-Key fields to extract from the catalog:
+### 5. Verify
 
-| Field | What to Look For |
-|-------|------------------|
-| Module path | The API module (e.g., `hivvl`, `eid`, `tb`) |
-| View perspective | The analytical perspective (e.g., `lab`, `clinic`, `summary`) |
-| Metric | What is being measured (e.g., `suppression`, `positivity`, `turnaround-time`) |
-| Time variant | Time granularity (e.g., `monthly`, `quarterly`, `yearly`) |
+Run the commands in SKILL.md, then open the page in the app (the user signs in) and go through the data review below.
 
-From the matched endpoint, extract:
-- **Full path** — e.g., `/api/v1/hivvl/lab/suppression/monthly`
-- **Parameters** — query parameters the endpoint accepts (date range, province, district, facility)
-- **Response fields** — the shape of the JSON response (field names, types, nesting)
+## Data review checklist (each card, before a page leaves `UNRELEASED_PAGES`)
 
-### Step 3: Determine Placement
+- [ ] Numbers match the legacy dashboard on the same period and filters, or the difference is a documented ✱.
+- [ ] Totals add up at every level: national = sum of provinces = sum of districts.
+- [ ] Every province and district name in the data matches the map. List the units with no map shape as known limits.
+- [ ] Rows with no name are grouped as "Sem província" / "Sem distrito" / "Sem unidade sanitária", shown last, and not dropped silently.
+- [ ] The first load shows a skeleton. Empty data shows "Sem dados para o período e filtros seleccionados." An API error shows a Portuguese message with "Tentar novamente".
+- [ ] The period filter and "Reiniciar o relatório" work. The subtitle shows the period.
+- [ ] Drill-down works: province → district → facility, and patients open for admins only.
+- [ ] "Exportar para Excel" has a title, the period and Portuguese headers. "Exportar imagem" works in light and dark mode.
+- [ ] The docs dialog opens and is correct.
+- [ ] Response time is noted (2–5 s is normal). Slow default requests are added to the report cache seeds.
+- [ ] Check the layout at phone width if you can resize the window. If you can't, say so.
 
-Use this table to decide where the report directory goes:
+Report each finding to the user with evidence. Ask the user about anything that is a product decision, for example whether a status badge should use the target or the predominant class.
 
-| Report Type | Section | Route Path |
-|-------------|---------|------------|
-| Laboratory performance, lab metrics | `lab` | `(dashboard)/lab/reports/` |
-| Facility/clinic performance, clinical metrics | `clinic` | `(dashboard)/clinic/reports/` |
-| Summary, overview, aggregate statistics | `(index)` | `(dashboard)/(index)/reports/` |
-| Patient-level data, individual results | `patients` | `(dashboard)/patients/reports/` |
+## Changing an existing card
 
-**Directory naming rules:**
-- Use kebab-case
-- Use a short prefix matching the domain (e.g., `vl-`, `eid-`, `tb-`)
-- Keep names descriptive but concise
-
-Examples:
-- `vl-suppression-by-province`
-- `eid-positivity-by-month`
-- `tb-turnaround-time-by-facility`
-- `vl-results-by-age-sex`
-
-The final path for a new report will be:
-```
-$MONOREPO/apps/<app-name>/app/(dashboard)/<section>/reports/<report-name>/
-```
-
-### Step 4: Generate Report Files
-
-Create 6 files in the report directory. Use the table below to know what to customize in each file.
-
-| File | What to Customize |
-|------|-------------------|
-| `constants.ts` | `API_CONFIG.BASE_URL` — set to the endpoint path from Step 2. `DEFAULTS.REPORT_NAME` — Portuguese name for the report (e.g., `"Supressão Viral por Província"`). `CHART_CONFIG` — unique chart ID, series name, and color palette. `UI_CONFIG.TAB_OPTIONS` — tab labels and values if the report supports multiple result views. |
-| `actions.ts` | Data type interface matching the API response fields from Step 2. `buildApiParams` function with domain-specific parameters (date range, province, district, facility type). `prepareChartData` function mapping API response fields to chart-ready format. |
-| `index.tsx` | Component name matching the report (PascalCase, e.g., `VlSuppressionByProvince`). Chart component selection — pick from the design system (see Chart Types below). Tab labels if using tabs. |
-| `excel-export-utils.ts` | Portuguese column headers matching the data fields (e.g., `"Província"`, `"Total de Testes"`, `"Taxa de Supressão"`). `prepareChartDataForExcel` function mapping data fields to spreadsheet columns. |
-| `chart-export-utils.ts` | Usually identical to the TB pattern — captures the chart element via `html2canvas` and triggers download. Copy from an existing report unless the chart structure differs. |
-| `docs.tsx` | Full Portuguese documentation explaining what the report shows, how to interpret the data, what filters are available, and what the chart represents. |
-
-### Step 5: Wire the Report
-
-Import the new report component into the parent section's `page.tsx` and add it to the responsive grid layout.
-
-```tsx
-// In: app/(dashboard)/<section>/page.tsx
-
-import VlSuppressionByProvince from "./reports/vl-suppression-by-province";
-
-// Inside the component's return JSX, add to the grid:
-<div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-  {/* Existing reports */}
-  <ExistingReport1 />
-  <ExistingReport2 />
-
-  {/* New report */}
-  <VlSuppressionByProvince />
-</div>
-```
-
-Match the grid column span to the report's visual weight:
-- Standard chart: `col-span-1`
-- Wide table or multi-series chart: `md:col-span-2`
-- Full-width summary: `xl:col-span-3`
-
-### Step 6: Verify
-
-Start the dev server and confirm everything works:
-
-```bash
-pnpm dev --filter=<app-name>
-```
-
-Verification checklist:
-
-- [ ] Report renders without errors in the browser
-- [ ] Loading state displays while data is being fetched
-- [ ] Data loads and populates the chart/table correctly
-- [ ] Chart displays with correct colors, labels, and axes
-- [ ] Drill-down navigation works (province -> district -> clinic -> patients)
-- [ ] Excel export downloads a valid `.xlsx` file with correct Portuguese headers
-- [ ] PNG export captures the chart and downloads a valid image
-- [ ] Documentation popup opens and displays Portuguese content
-- [ ] Tab switching works if the report has multiple views
-- [ ] Error state displays when the API is unreachable
-- [ ] Empty state displays when no data is returned
-- [ ] Reset button returns all filters to defaults
-
----
-
-## Modifying Existing Reports
-
-### Read First (Always)
-
-Before making any change, read the complete report directory — all 6 files. Understand the current data flow, chart configuration, and export mappings before editing.
-
-```bash
-ls -la $MONOREPO/apps/<app-name>/app/\(dashboard\)/<section>/reports/<report-name>/
-```
-
-Read every file in the report directory. Do not modify files you have not read.
-
-### Change Size Decision Table
-
-| Change Size | Examples | Action |
-|-------------|----------|--------|
-| **Small** — label, color, filter | Update a Portuguese label, change chart color palette, add a filter option, adjust column width, fix a typo | Apply the change directly. Verify dev server still renders correctly. |
-| **Large** — chart type, data series, drill-down | Change from bar chart to line chart, add new data series, restructure drill-down hierarchy, change API endpoint, refactor data transformation | Propose the change first — describe what will change across which files and why. Wait for approval before implementing. |
-
----
-
-## Chart Types Available
-
-The design system provides these chart components. Prefer ApexCharts for consistency with existing dashboards.
-
-### ApexCharts (Preferred)
-
-| Chart Type | Component | Best For |
-|------------|-----------|----------|
-| Stacked Bar | `ApexStackedBarChart` | Comparing categories with sub-groups (e.g., suppression by province with age breakdown) |
-| Bar | `ApexBarChart` | Simple category comparison (e.g., total tests by facility) |
-| Line | `ApexLineChart` | Trends over time (e.g., monthly positivity rate) |
-| Pie | `ApexPieChart` | Proportional distribution (e.g., result type breakdown) |
-| Area | `ApexAreaChart` | Cumulative trends over time (e.g., cumulative tests processed) |
-
-### Recharts (Alternative)
-
-| Chart Type | Component | When to Use |
-|------------|-----------|-------------|
-| Bar | `BarChart` | When the dashboard already uses Recharts extensively |
-| Line | `LineChart` | When the dashboard already uses Recharts extensively |
-| Pie | `PieChart` | When the dashboard already uses Recharts extensively |
-| Area | `AreaChart` | When the dashboard already uses Recharts extensively |
-| Composed | `ComposedChart` | When mixing bar + line in a single chart |
-
-**Rule:** Use whichever library the target dashboard already uses. If starting fresh or if the dashboard uses both, prefer ApexCharts.
-
----
-
-## Report Capabilities Checklist
-
-Every report should support all of the following capabilities. Use this checklist when creating or reviewing a report.
-
-- [ ] **Date range filtering** — User can select start and end dates (default: last 12 months)
-- [ ] **Drill-down navigation** — Province -> District -> Clinic -> Patients hierarchy
-- [ ] **Tab switching** — Multiple result views when the data supports it (e.g., by age, by sex, by result type)
-- [ ] **Excel export** — Downloads `.xlsx` with Portuguese column headers and formatted data
-- [ ] **PNG export** — Captures the chart as a PNG image and downloads it
-- [ ] **Documentation popup** — In-app Portuguese documentation explaining the report
-- [ ] **Suggestion/feedback** — User can submit feedback or suggestions about the report
-- [ ] **Reset to defaults** — Button to clear all filters and return to initial state
-- [ ] **Loading state** — Skeleton or spinner while data is being fetched
-- [ ] **Error state** — User-friendly message when the API call fails
-- [ ] **Empty state** — Informative message when no data matches the current filters
+Read every file in the card folder first.
+- **Small changes** (label, colour, an extra filter option): apply them directly.
+- **Large changes** (chart type, series, drill-down, endpoint): describe the change and the files it touches, and wait for approval.
+- **Redesign work:** change visuals only. Props, cards, menus, exports, data flow and routes stay the same, and existing tests pass unchanged.
